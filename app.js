@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoClient = require('mongodb').MongoClient;
 var session = require('express-session');
-var routes = require('./controllers/users');
+var routes = require('./controllers/usersController');
 
 var app = express();
 
@@ -18,12 +18,6 @@ mongoClient.connect("mongodb://localhost:27017/local", function(error, dbc){
     console.log('connected to MongoDB');
   }
 });
-// var db = mongoClient.connection;
-
-// db.on('error', console.error.bind(console, 'connection error:'));
-// db.once('open', function () {
-//   console.log('connected to MongoDB');
-// });
 
 app.use(session({
   secret: 'work hard',
