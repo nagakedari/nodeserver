@@ -4,21 +4,26 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
+var mongoClient = require('mongodb').MongoClient;
 var session = require('express-session');
-
-var index = require('./routes/index');
-var users = require('./routes/users');
+var routes = require('./controllers/users');
 
 var app = express();
 
-mongoose.connect("mongodb://localhost:27017/local");
-var db = mongoose.connection;
-
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function () {
-  console.log('connected to MongoDB');
+mongoClient.connect("mongodb://localhost:27017/local", function(error, dbc){
+  if (error){
+    console.error.bind(console, 'connection error:');
+  } else {
+    app.set('mongo', dbc);
+    console.log('connected to MongoDB');
+  }
 });
+// var db = mongoClient.connection;
+
+// db.on('error', console.error.bind(console, 'connection error:'));
+// db.once('open', function () {
+//   console.log('connected to MongoDB');
+// });
 
 app.use(session({
   secret: 'work hard',
@@ -38,9 +43,15 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-var routes = require('./routes/router')
-app.use('/', routes);
-app.use('/users', users);
+// app.use('/', routes);
+
+var configList = ['routes'];
+
+configList.forEach(function(name){
+ var file = path.join(__dirname,'config', name);
+ var config = require(file);
+ return new config(app)
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

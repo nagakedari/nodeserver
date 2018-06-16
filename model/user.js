@@ -1,53 +1,35 @@
-var mongoose = require('mongoose');
+var db = require('mongodb');
 var bcrypt = require('bcrypt');
 
-var UserSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    unique: true,
-    required: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  role: {
-    type: String,
-    required: true,
-  }
-});
+var User = function (app) {
+  this.dbc = app.get('mongo');
+  var db = this.dbc.db('local');
+  this.collection = db.collection('users');
+};
 
-UserSchema.pre('save', function (next) {
-  var user = this;
-  bcrypt.hash(user.password, 10, function (err, hash){
+User.prototype.add = function (user, callback) {
+  var collection = this.collection;
+  bcrypt.hash(user.password, 10, function (err, hash) {
     if (err) {
-      return next(err);
+      callback(err, user);
     }
     user.password = hash;
-    next();
-  })
-});
-
-UserSchema.statics.authenticate = function (username, password, callback) {
-  User.findOne({ username: username })
-    .exec(function (err, user) {
-      if (err) {
-        return callback(err)
-      } else if (!user) {
-        var err = new Error('User not found.');
-        err.status = 401;
-        return callback(err);
-      }
-      bcrypt.compare(password, user.password, function (err, result) {
-        if (result === true) {
-          return callback(null, user);
-        } else {
-          return callback();
-        }
-      })
+    collection.insert(user, function (err, result) {
+      callback(err, result);
     });
+  });
+};
+
+User.prototype.find = function(data, callback) {
+  this.collection.find().sort({username: 1}).toArray(function(err, users){
+    callback(err, users);
+  });
+};
+
+User.prototype.findOne = function(data, callback) {
+  this.collection.findOne(data, function(err, user){
+    callback(err, user);
+  });
 }
 
-var User = mongoose.model('User', UserSchema);
 module.exports = User;

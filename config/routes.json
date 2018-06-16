@@ -1,0 +1,10 @@
+{
+    "users":[
+        {
+            "method": "post",
+            "path": "/users",
+            "action": "add"
+        }
+        
+    ]
+}
